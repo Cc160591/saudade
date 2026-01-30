@@ -1,8 +1,19 @@
 import OpenAI from 'openai'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-})
+// #region agent log (lazy instance)
+let openaiClient: OpenAI | null = null
+function getOpenAI() {
+  if (!openaiClient) {
+    const apiKey = process.env.OPENAI_API_KEY
+    
+    if (!apiKey) {
+      throw new Error('OPENAI_API_KEY is not set in environment variables')
+    }
+    openaiClient = new OpenAI({ apiKey })
+  }
+  return openaiClient
+}
+// #endregion
 
 const CATEGORIES = [
   'Carne',
@@ -15,6 +26,8 @@ const CATEGORIES = [
 ]
 
 export async function extractDocumentData(text: string, metadata: any) {
+  const openai = getOpenAI()
+  
   const prompt = `
 Sei un assistente esperto in gestione amministrativa per ristoranti (Saudade). 
 Il tuo compito è estrarre dati strutturati da un testo estratto da una bolla o fattura.
